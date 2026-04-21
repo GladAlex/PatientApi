@@ -1,0 +1,15 @@
+# Build output
+**/bin/
+**/obj/
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Secrets
+**/appsettings.Development.json
+
+# Docker volumes
+*.vhdx

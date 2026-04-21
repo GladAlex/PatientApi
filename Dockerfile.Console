@@ -1,0 +1,19 @@
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+WORKDIR /src
+
+COPY ["PatientApi.Console/PatientApi.Console.csproj", "PatientApi.Console/"]
+RUN dotnet restore "PatientApi.Console/PatientApi.Console.csproj"
+
+COPY PatientApi.Console/ PatientApi.Console/
+WORKDIR /src/PatientApi.Console
+RUN dotnet build "PatientApi.Console.csproj" -c Release -o /app/build
+RUN dotnet publish "PatientApi.Console.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/runtime:6.0 AS final
+WORKDIR /app
+
+COPY --from=build /app/publish .
+
+ENTRYPOINT ["dotnet", "PatientApi.Console.dll"]

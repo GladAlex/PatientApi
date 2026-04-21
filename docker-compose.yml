@@ -1,0 +1,57 @@
+version: '3.9'
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: patient_db
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "YourStrong!Passw0rd"
+      MSSQL_PID: Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'YourStrong!Passw0rd' -Q 'SELECT 1' -No -l 5 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: patient_api
+    ports:
+      - "8080:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Server=db;Database=PatientDb;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: on-failure
+
+  console:
+    build:
+      context: .
+      dockerfile: Dockerfile.Console
+    container_name: patient_console
+    environment:
+      - API_BASE_URL=http://api:80
+    depends_on:
+      api:
+        condition: service_started
+    # Waits for API to be ready, then seeds 100 patients
+    entrypoint: >
+      sh -c "
+        echo 'Waiting for API to start...' &&
+        sleep 15 &&
+        dotnet PatientApi.Console.dll http://api:80
+      "
+    restart: "no"
+
+volumes:
+  mssql_data:

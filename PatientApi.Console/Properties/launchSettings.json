@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "PatientApi.Console": {
+      "commandName": "Project",
+      "commandLineArgs": "https://localhost:55143/"
+    }
+  }
+}

@@ -1,0 +1,438 @@
+{
+  "info": {
+    "name": "Patient API",
+    "_postman_id": "patient-api-collection-v1",
+    "description": "CRUD + FHIR birthDate search for Patient API.\n\nBase URL: https://localhost:8080\n\nBirthDate search follows FHIR spec: https://www.hl7.org/fhir/search.html#date\n\nSupported prefixes: eq, ne, lt, gt, le, ge, sa, eb, ap\nDate formats: YYYY | YYYY-MM | YYYY-MM-DD | YYYY-MM-DDThh:mm:ss",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "patientId",
+      "value": "",
+      "type": "string",
+      "description": "Filled automatically after Create request"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Create Patient",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 201 Created', function() {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test('Response has patient id', function() {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json.name.id).to.be.a('string');",
+              "    pm.collectionVariables.set('patientId', json.name.id);",
+              "    console.log('Created patient ID:', json.name.id);",
+              "});",
+              "",
+              "pm.test('BirthDate returned correctly', function() {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json.birthDate).to.include('2026');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": {\n    \"use\": \"official\",\n    \"family\": \"Иванов\",\n    \"given\": [\"Иван\", \"Иванович\"]\n  },\n  \"gender\": \"male\",\n  \"birthDate\": \"2026-01-13T18:25:43\",\n  \"active\": true\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/patient",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "patient"]
+        },
+        "description": "Creates a new patient. Required fields: name.family, birthDate.\nThe returned name.id (GUID) is automatically saved to the {{patientId}} variable."
+      }
+    },
+    {
+      "name": "2. Get Patient by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 200 OK', function() {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response contains family name', function() {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json.name.family).to.be.a('string');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/patient/{{patientId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "patient", "{{patientId}}"]
+        },
+        "description": "Get a single patient by their GUID. Uses {{patientId}} variable set by Create request."
+      }
+    },
+    {
+      "name": "3. Update Patient",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 200 OK', function() {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Family name updated', function() {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json.name.family).to.equal('Иванов-Обновлённый');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": {\n    \"use\": \"official\",\n    \"family\": \"Иванов-Обновлённый\",\n    \"given\": [\"Иван\", \"Иванович\"]\n  },\n  \"gender\": \"male\",\n  \"birthDate\": \"2026-01-13T18:25:43\",\n  \"active\": true\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/patient/{{patientId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "patient", "{{patientId}}"]
+        },
+        "description": "Update all fields of an existing patient. Uses {{patientId}} variable."
+      }
+    },
+    {
+      "name": "4. Delete Patient",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 204 No Content', function() {",
+              "    pm.response.to.have.status(204);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/patient/{{patientId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "patient", "{{patientId}}"]
+        },
+        "description": "Delete a patient by GUID. Uses {{patientId}} variable."
+      }
+    },
+    {
+      "name": "Search — BirthDate Search",
+      "item": [
+        {
+          "name": "5a. Search: exact date (eq) — default",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patient?birthDate=2026-01-13",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patient"],
+              "query": [{ "key": "birthDate", "value": "2026-01-13" }]
+            },
+            "description": "eq (equals) — default prefix. Matches any patient born on 2026-01-13 (full day range).\nEquivalent to: birthDate=eq2026-01-13"
+          }
+        },
+        {
+          "name": "5b. Search: explicit eq prefix",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patient?birthDate=eq2026-01-13",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patient"],
+              "query": [{ "key": "birthDate", "value": "eq2026-01-13" }]
+            },
+            "description": "eq (equals) — explicit prefix. Same as above."
+          }
+        },
+        {
+          "name": "5c. Search: year only (eq YYYY)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patient?birthDate=2026",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patient"],
+              "query": [{ "key": "birthDate", "value": "2026" }]
+            },
+            "description": "Year precision — matches all patients born in 2026.\nRange: 2026-01-01T00:00:00 to 2026-12-31T23:59:59.9999999"
+          }
+        },
+        {
+          "name": "5d. Search: year-month (eq YYYY-MM)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patient?birthDate=2026-01",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patient"],
+              "query": [{ "key": "birthDate", "value": "2026-01" }]
+            },
+            "description": "Month precision — matches all patients born in January 2026.\nRange: 2026-01-01T00:00:00 to 2026-01-31T23:59:59.9999999"
+          }
+        },
+        {
+          "name": "5e. Search: greater than (gt)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patient?birthDate=gt2026-01-01",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patient"],
+              "query": [{ "key": "birthDate", "value": "gt2026-01-01" }]
+            },
+            "description": "gt (greater than) — patients born after 2026-01-01 (exclusive of the date itself).\nValue must be strictly after the upper bound of the date range."
+          }
+        },
+        {
+          "name": "5f. Search: less than (lt)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patient?birthDate=lt2025-06-01",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patient"],
+              "query": [{ "key": "birthDate", "value": "lt2025-06-01" }]
+            },
+            "description": "lt (less than) — patients born before 2025-06-01 (exclusive)."
+          }
+        },
+        {
+          "name": "5g. Search: greater than or equal (ge)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patient?birthDate=ge2026-01-01",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patient"],
+              "query": [{ "key": "birthDate", "value": "ge2026-01-01" }]
+            },
+            "description": "ge (greater than or equal) — patients born from 2026-01-01 onwards (inclusive)."
+          }
+        },
+        {
+          "name": "5h. Search: less than or equal (le)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patient?birthDate=le2025-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patient"],
+              "query": [{ "key": "birthDate", "value": "le2025-12-31" }]
+            },
+            "description": "le (less than or equal) — patients born on or before 2025-12-31."
+          }
+        },
+        {
+          "name": "5i. Search: not equal (ne)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patient?birthDate=ne2026-01-13",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patient"],
+              "query": [{ "key": "birthDate", "value": "ne2026-01-13" }]
+            },
+            "description": "ne (not equal) — patients NOT born on 2026-01-13."
+          }
+        },
+        {
+          "name": "5j. Search: starts after (sa)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patient?birthDate=sa2025-06-01",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patient"],
+              "query": [{ "key": "birthDate", "value": "sa2025-06-01" }]
+            },
+            "description": "sa (starts after) — the resource's date starts after 2025-06-01.\nFor a simple date this is effectively the same as gt."
+          }
+        },
+        {
+          "name": "5k. Search: ends before (eb)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patient?birthDate=eb2025-06-01",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patient"],
+              "query": [{ "key": "birthDate", "value": "eb2025-06-01" }]
+            },
+            "description": "eb (ends before) — the resource's date ends before 2025-06-01.\nFor a simple date this is effectively the same as lt."
+          }
+        },
+        {
+          "name": "5l. Search: approximate (ap)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patient?birthDate=ap2026-01-13",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patient"],
+              "query": [{ "key": "birthDate", "value": "ap2026-01-13" }]
+            },
+            "description": "ap (approximately) — patients born approximately around 2026-01-13.\nImplemented as ±10% of the date's precision range (~2.4 days for a day-precision date)."
+          }
+        },
+        {
+          "name": "5m. Search: exact datetime (eq with time)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patient?birthDate=eq2026-01-13T18:25:43",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patient"],
+              "query": [{ "key": "birthDate", "value": "eq2026-01-13T18:25:43" }]
+            },
+            "description": "Full datetime precision search — matches birthDate within the same second.\nRange: 2026-01-13T18:25:43.0000000 to 2026-01-13T18:25:43.9999999"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Create Patient — Validation Error (missing family)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 400 Bad Request', function() {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": {\n    \"use\": \"official\",\n    \"given\": [\"Иван\"]\n  },\n  \"gender\": \"male\",\n  \"birthDate\": \"2026-01-13T18:25:43\",\n  \"active\": true\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/patient",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "patient"]
+        },
+        "description": "Should return 400 because name.family is missing (required field)."
+      }
+    },
+    {
+      "name": "7. Create Patient — Validation Error (missing birthDate)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 400 Bad Request', function() {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": {\n    \"use\": \"official\",\n    \"family\": \"Петров\",\n    \"given\": [\"Пётр\"]\n  },\n  \"gender\": \"male\",\n  \"active\": true\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/patient",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "patient"]
+        },
+        "description": "Should return 400 because birthDate is missing (required field)."
+      }
+    },
+    {
+      "name": "8. Get Patient — Not Found",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 404 Not Found', function() {",
+              "    pm.response.to.have.status(404);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/patient/00000000-0000-0000-0000-000000000000",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "patient", "00000000-0000-0000-0000-000000000000"]
+        },
+        "description": "Should return 404 for a non-existent patient ID."
+      }
+    }
+  ]
+}
