@@ -65,8 +65,7 @@ PatientApi/
 - `active`: `true | false`
 
 **Таблицы БД:**
-- `Patients` — `Id (PK/GUID)`, `Gender`, `BirthDate`, `Active`
-- `PatientNames` — `Id (PK + FK → Patients.Id)`, `Use`, `Family`, `Given`
+- `Patients` — `Id (PK/GUID)`, `Gender`, `BirthDate`, `Active`, `Use`, `Family`, `Given`
 
 ## Быстрый старт с Docker
 
