@@ -14,6 +14,9 @@ namespace PatientApi.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Use = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Family = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    Given = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
                     Gender = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     BirthDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Active = table.Column<bool>(type: "bit", nullable: false)
@@ -21,26 +24,6 @@ namespace PatientApi.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Patients", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "PatientNames",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Use = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    Family = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    Given = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PatientNames", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_PatientNames_Patients_Id",
-                        column: x => x.Id,
-                        principalTable: "Patients",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
@@ -51,9 +34,6 @@ namespace PatientApi.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "PatientNames");
-
             migrationBuilder.DropTable(
                 name: "Patients");
         }

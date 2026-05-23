@@ -38,21 +38,12 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Create db and execute migrations on start
+// Create db(if it doesn't exist) and execute migrations on start
 using (var scope = app.Services.CreateScope())
-{
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
-    var connectionString = config.GetConnectionString("DefaultConnection")!;
-
-    // Create db if it doesn't exist
-    EnsureDatabase(connectionString, logger);
-
+{       
     // Execute migrations
     var db = scope.ServiceProvider.GetRequiredService<PatientApiDbContext>();
     db.Database.Migrate();
-
-    logger.LogInformation("Database ready.");
 }
 
 app.UseSwagger();
@@ -65,22 +56,3 @@ app.UseSwaggerUI(c =>
 app.MapControllers();
 
 app.Run();
-
-static void EnsureDatabase(string connectionString, ILogger logger)
-{
-    var builder = new SqlConnectionStringBuilder(connectionString);
-    var databaseName = builder.InitialCatalog;   
-
-     builder.InitialCatalog = "master";
-
-    using var connection = new SqlConnection(builder.ConnectionString);
-    connection.Open();
-
-    using var cmd = connection.CreateCommand();
-    cmd.CommandText =
-     "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = '" + databaseName + "') " +
-     "BEGIN CREATE DATABASE [" + databaseName + "] END";
-    cmd.ExecuteNonQuery();
-
-    logger.LogInformation("Database '{Database}' ensured.", databaseName);
-}

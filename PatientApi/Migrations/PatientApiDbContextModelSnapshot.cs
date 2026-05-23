@@ -23,71 +23,27 @@ namespace PatientApi.Migrations
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
             modelBuilder.Entity("PatientApi.Models.Patient", b =>
+            {
+                b.Property<Guid>("Id").ValueGeneratedOnAdd().HasColumnType("uniqueidentifier");
+                b.Property<bool>("Active").HasColumnType("bit");
+                b.Property<DateTime>("BirthDate").IsRequired().HasColumnType("datetime2");
+                b.Property<string>("Gender").IsRequired().HasMaxLength(20).HasColumnType("nvarchar(20)");
+                b.HasKey("Id");
+                b.HasIndex("BirthDate").HasDatabaseName("IX_Patients_BirthDate");
+                b.ToTable("Patients");
+
+                b.OwnsOne("PatientApi.Models.PatientName", "Name", n =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("Active")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("BirthDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Gender")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BirthDate")
-                        .HasDatabaseName("IX_Patients_BirthDate");
-
-                    b.ToTable("Patients");
+                    n.Property<string>("Family").IsRequired().HasMaxLength(255).HasColumnName("Family").HasColumnType("nvarchar(255)");
+                    n.Property<string>("Given").IsRequired().HasMaxLength(1000).HasColumnName("Given").HasColumnType("nvarchar(1000)");
+                    n.Property<string>("Use").IsRequired().HasMaxLength(50).HasColumnName("Use").HasColumnType("nvarchar(50)");
+                    n.WithOwner().HasForeignKey("Id");
+                    n.HasKey("Id");
                 });
 
-            modelBuilder.Entity("PatientApi.Models.PatientName", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Family")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("Given")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<string>("Use")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PatientNames");
-                });
-
-            modelBuilder.Entity("PatientApi.Models.PatientName", b =>
-                {
-                    b.HasOne("PatientApi.Models.Patient", "Patient")
-                        .WithOne("Name")
-                        .HasForeignKey("PatientApi.Models.PatientName", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Patient");
-                });
-
-            modelBuilder.Entity("PatientApi.Models.Patient", b =>
-                {
-                    b.Navigation("Name")
-                        .IsRequired();
-                });
+                b.Navigation("Name").IsRequired();
+            });
+           
 #pragma warning restore 612, 618
         }
     }

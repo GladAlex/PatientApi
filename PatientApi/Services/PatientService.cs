@@ -16,16 +16,14 @@ public class PatientService : IPatientService
 
     public async Task<PatientResponseDto?> GetByIdAsync(Guid id)
     {
-        var patient = await _db.Patients
-            .Include(p => p.Name)
-            .FirstOrDefaultAsync(p => p.Id == id);
+        var patient = await _db.Patients.FirstOrDefaultAsync(p => p.Id == id);
 
         return patient == null ? null : MapToResponse(patient);
     }
 
     public async Task<List<PatientResponseDto>> SearchByBirthDateAsync(string birthDateParam)
     {
-        var query = _db.Patients.Include(p => p.Name).AsQueryable();
+        var query = _db.Patients.AsQueryable();
         if (!string.IsNullOrWhiteSpace(birthDateParam))
         {
             var param = FhirDateSearchParser.Parse(birthDateParam);
@@ -53,7 +51,6 @@ public class PatientService : IPatientService
             Active = dto.Active,
             Name = new PatientName
             {
-                Id = id,   // same GUID as PK+FK
                 Use = dto.Name.Use,
                 Family = dto.Name.Family,
                 Given = dto.Name.Given
@@ -68,9 +65,7 @@ public class PatientService : IPatientService
 
     public async Task<PatientResponseDto?> UpdateAsync(Guid id, PatientUpdateRequestDto dto)
     {
-        var patient = await _db.Patients
-            .Include(p => p.Name)
-            .FirstOrDefaultAsync(p => p.Id == id);
+        var patient = await _db.Patients.FirstOrDefaultAsync(p => p.Id == id);
 
         if (patient == null)
         {
